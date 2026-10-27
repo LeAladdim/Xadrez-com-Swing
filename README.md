@@ -10,3 +10,11 @@ Algumas funcionalidades implementadas:
 ° Notação da partida com feedback de precisão do lance
 
 ° Setas de predição de movimento com o botão direito do mouse para auxiliar na previsão de jogadas
+
+° Seta de melhor lance (opcional)
+
+° Versão com motor próprio calculando o melhor lance (rodando localmente)
+
+° Opção de análise de partidas exportadas usando PGN ou as notações
+
+
