@@ -1,0 +1,12 @@
+[Event " Classical game"]
+[Site "https://lichess.org/ocg_3458e9e8"]
+[Date "2026.10.20"]
+[Variant "Standard"]
+[Round "?"]
+[White "Anonymous"]
+[Black "Stockfish"]
+[Result "1-0"]
+[WhiteElo "?"]
+[BlackElo "?"]
+
+1. e4 Nc6 2. Nf3 e6 3. Be2 Nge7 4. d3 e5 5. O-O d5 6. exd5 Nd4 7. Nxd4 Nxd5 8. Nf3 Bd6 9. Re1 c5 10. Bg5 f6 11. Bd2 Qd7 12. Nc3 Nxc3 13. Bxc3 a6 14. d4 cxd4 15. Bd2 Bc7 16. c3 dxc3 17. Bxc3 Qxd1 18. Rexd1 Bg4 19. Rac1 Bd7 20. Ne1 Bc6 21. Bh5+ Kf8 22. Bb4+ Kg8 23. Rxc6 a5 24. Ba3 Bd8 25. Rxd8+ Rxd8 26. Rc7 h6 27. Bf7+ Kh7 28. Be6 Rb8 29. Bf5+ Kg8 30. Bd6 b5 31. Nf3 Rd8 32. Bd7 Kf7 33. Bxb5+ Kg6 34. Nh4+ Kh7 35. Bd3+ f5 36. Bxf5+ Kg8 37. Be6+ Kh7 38. Bd7 Rxd7 39. Rxd7 Rc8 40. g3 Rc1+ 41. Kg2 h5 42. Bf8 Rc6 43. Rxg7+ Kh8 44. Ng6+ Rxg6 45. Rxg6 a4 46. a3 Kh7 47. Rg7+ Kh8 48. h4 e4 49. g4 hxg4 50. h5 e3 51. fxe3 g3 52. Rxg3 Kh7 53. e4 Kh8 54. e5 Kh7 55. e6 Kh8 56. e7 Kh7 57. e8=Q Kh8 58. Rg8+ Kxg8 59. h6 Kh7 60. Qf7+ Kh8 61. Bg7+ Kh7 62. Bf8+ Kh8 63. Qg7# 1-0
