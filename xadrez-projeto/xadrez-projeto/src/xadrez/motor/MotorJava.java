@@ -79,10 +79,13 @@ public class MotorJava {
             if (uci != null && posicao.uciParaLance(uci) == 0) uci = null; // lance de livro inválido: ignora
             int pontos; // do ponto de vista de quem joga
             if (uci == null) {
-                boolean plena = nivel.profundidade >= PROFUNDIDADE_MAXIMA && nivel.chanceAleatoria == 0;
+                boolean humano = !nivel.visaoTatica || nivel.ruidoCp > 0; // níveis que erram como pessoas (ver NivelDificuldade)
+                boolean plena = !humano && nivel.profundidade >= PROFUNDIDADE_MAXIMA && nivel.chanceAleatoria == 0;
                 Busca busca = new Busca(token);
                 long tempo = plena ? alvoMs - MARGEM_MS : TEMPO_NIVEL_FRACO_MS;
-                int m = busca.melhorLance(posicao, nivel.profundidade, tempo, nivel.chanceAleatoria);
+                int m = humano
+                    ? busca.melhorLanceHumano(posicao, nivel.profundidade, nivel.visaoTatica, nivel.ruidoCp, nivel.chanceAleatoria, tempo)
+                    : busca.melhorLance(posicao, nivel.profundidade, tempo, nivel.chanceAleatoria);
                 if (token.isCancelado() || m == 0) return;
                 uci = posicao.lanceParaUci(m);
                 pontos = plena ? busca.getUltimaPontuacao() : avaliar(posicao, token, limiteBusca);

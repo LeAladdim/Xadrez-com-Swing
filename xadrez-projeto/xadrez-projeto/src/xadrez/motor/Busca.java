@@ -17,6 +17,8 @@ final class Busca {
     private final Random rnd = new Random();
     private long prazo, nos;
     private int ultimaPontuacao;
+    /** Com false, a busca para na profundidade fixa (sem quiescência nem extensão de xeque): enxerga menos táticas, como um jogador fraco. */
+    private boolean visaoTatica = true;
 
     Busca(Cancelamento cancelamento) {
         this.cancelamento = cancelamento;
@@ -71,8 +73,8 @@ final class Busca {
         verificarTempo();
         if (p.half >= 100) return 0;
         boolean xeque = p.emXeque();
-        if (xeque && ply < 40) profundidade++;
-        if (profundidade <= 0) return quiescencia(p, alfa, beta, ply);
+        if (visaoTatica && xeque && ply < 40) profundidade++;
+        if (profundidade <= 0) return visaoTatica ? quiescencia(p, alfa, beta, ply) : Avaliador.avaliar(p) * (p.brancas ? 1 : -1);
         int[] lances = p.lancesLegais();
         if (lances.length == 0) return xeque ? -MATE + ply : 0;
         int melhor = -INF;
@@ -120,5 +122,39 @@ final class Busca {
             // usa o resultado da última profundidade concluída
         }
         return melhor;
+    }
+
+    /**
+     * Escolhe um lance "humano" para os níveis fracos: busca de profundidade fixa, nota exata de cada lance
+     * e erros simulados (ruído gaussiano na nota de cada lance).
+     *
+     * @param visaoTatica     false = sem busca de capturas (deixa de ver trocas e peças penduradas)
+     * @param ruidoCp         desvio-padrão do erro, em centipeões (maior = erra mais)
+     * @param chanceAleatoria percentual de lances totalmente aleatórios
+     */
+    int melhorLanceHumano(Posicao p, int profundidade, boolean visaoTatica, int ruidoCp, int chanceAleatoria, long tempoMs) {
+        int[] lances = p.lancesLegais();
+        ultimaPontuacao = Avaliador.avaliar(p) * (p.brancas ? 1 : -1);
+        if (lances.length <= 1) return lances.length == 1 ? lances[0] : 0;
+        if (rnd.nextInt(100) < chanceAleatoria) return lances[rnd.nextInt(lances.length)];
+        this.visaoTatica = visaoTatica;
+        prazo = System.nanoTime() + tempoMs * 1_000_000L;
+        int escolhido = lances[0];
+        double melhorNota = -Double.MAX_VALUE;
+        int melhorPontuacao = -INF;
+        try {
+            for (int m : lances) {
+                int sc = -negamax(p.fazerLance(m), profundidade - 1, -INF, INF, 1);   // nota exata do lance (janela cheia)
+                double nota = sc + rnd.nextGaussian() * ruidoCp;                      // "erro humano"
+                if (nota > melhorNota) { melhorNota = nota; escolhido = m; }
+                if (sc > melhorPontuacao) melhorPontuacao = sc;
+            }
+            ultimaPontuacao = melhorPontuacao;
+        } catch (TempoEsgotado e) {
+            // sem tempo: usa o melhor visto até aqui
+        } finally {
+            this.visaoTatica = true;
+        }
+        return escolhido;
     }
 }
