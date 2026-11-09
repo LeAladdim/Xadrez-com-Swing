@@ -50,6 +50,7 @@ public class PainelTabuleiro extends JPanel {
     private static final Color COR_SETA = new Color(255, 160, 0, 205), COR_PREVIA = new Color(255, 160, 0, 115);
     private static final Color COR_SUGESTAO = new Color(0, 150, 255, 160);
     private static final Color COR_MARCADOR = new Color(0, 0, 0, 80);
+    private static final Color BRILHO_CENTRO = new Color(255, 232, 90, 185), BRILHO_BORDA = new Color(255, 196, 0, 105);
     private static final int MARGEM = 64;
 
     private Posicao posicao = Posicao.inicial();
@@ -58,6 +59,7 @@ public class PainelTabuleiro extends JPanel {
     private int selecionada = -1;
     private int casaReiEmXeque = -1;
     private boolean xequeMate;
+    private int ultimoDe = -1, ultimoPara = -1; // casas do último lance (destacadas com brilho)
     private final List<int[]> setasUsuario = new ArrayList<>(); // {origem, destino}; origem == destino = círculo
     private int setaOrigem = -1, setaAtual = -1;                // seta em construção (botão direito pressionado)
     private String sugestaoUci;
@@ -107,12 +109,43 @@ public class PainelTabuleiro extends JPanel {
     // ------------------------------------------------------------ API pública
 
     public void atualizarMundo(Posicao novaPosicao, boolean tabuleiroInvertido) {
+        inferirUltimoLance(this.posicao, novaPosicao);
         this.posicao = novaPosicao;
         this.invertido = tabuleiroInvertido;
         this.selecionada = -1;
         boolean xeque = novaPosicao.emXeque();
         this.casaReiEmXeque = xeque ? novaPosicao.casaRei(novaPosicao.brancas) : -1;
         this.xequeMate = xeque && novaPosicao.lancesLegais().length == 0;
+        repaint();
+    }
+
+    /**
+     * Descobre o último lance comparando a posição anterior com a nova: se a nova é exatamente um lance legal
+     * depois da anterior, destaca origem e destino. Se for a mesma posição (ex.: inverter o tabuleiro) mantém o
+     * destaque; em qualquer outro caso (novo jogo, desfazer, saltos na análise) remove.
+     */
+    private void inferirUltimoLance(Posicao anterior, Posicao nova) {
+        if (anterior == nova) return;
+        String chaveNova = nova.chave();
+        if (anterior.chave().equals(chaveNova)) return;
+        ultimoDe = ultimoPara = -1;
+        for (int m : anterior.lancesLegais()) {
+            if (anterior.fazerLance(m).chave().equals(chaveNova)) {
+                ultimoDe = m & 63;
+                ultimoPara = (m >> 6) & 63;
+                return;
+            }
+        }
+    }
+
+    /** Define o último lance explicitamente (UCI, ex.: "e2e4"); null remove o destaque. */
+    public void setUltimoLance(String uci) {
+        if (uci == null || uci.length() < 4) {
+            ultimoDe = ultimoPara = -1;
+        } else {
+            ultimoDe = (8 - (uci.charAt(1) - '0')) * 8 + (uci.charAt(0) - 'a');
+            ultimoPara = (8 - (uci.charAt(3) - '0')) * 8 + (uci.charAt(2) - 'a');
+        }
         repaint();
     }
 
@@ -241,6 +274,7 @@ public class PainelTabuleiro extends JPanel {
             int x = bx + (invertido ? 7 - c : c) * s, y = by + (invertido ? 7 - r : r) * s;
             g.setColor((r + c) % 2 == 1 ? tema.escura : tema.clara);
             g.fillRect(x, y, s, s);
+            if (sq == ultimoDe || sq == ultimoPara) pintarBrilho(g, x, y, s);
             if (sq == selecionada) {
                 g.setColor(COR_SELECAO);
                 g.fillRect(x, y, s, s);
@@ -275,6 +309,16 @@ public class PainelTabuleiro extends JPanel {
         }
         for (int[] a : setasUsuario) Setas.desenhar(g, a[0], a[1], COR_SETA, bx, by, s, invertido);
         if (setaOrigem >= 0 && setaAtual >= 0) Setas.desenhar(g, setaOrigem, setaAtual, COR_PREVIA, bx, by, s, invertido);
+    }
+
+    /** Brilho dourado nas casas do último lance: mais forte no centro, com uma borda fina clara. */
+    private void pintarBrilho(Graphics2D g, int x, int y, int s) {
+        g.setPaint(new RadialGradientPaint(x + s / 2f, y + s / 2f, s * 0.75f, new float[]{0f, 1f},
+                new Color[]{BRILHO_CENTRO, BRILHO_BORDA}));
+        g.fillRect(x, y, s, s);
+        g.setColor(new Color(255, 240, 150, 190));
+        g.setStroke(new BasicStroke(Math.max(2f, s / 28f)));
+        g.drawRect(x + 1, y + 1, s - 3, s - 3);
     }
 
     /** Xeque: brilho vermelho na casa do rei. Xeque-mate: casa vermelha forte com borda escura. */
